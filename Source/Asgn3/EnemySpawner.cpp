@@ -5,7 +5,6 @@
 #include "TimerManager.h"
 #include "Engine/Engine.h"
 
-// Fixed key for updating the kill counter in place.
 static const uint64 KillsMessageKey = 0x7A4E1003;
 
 AEnemySpawner::AEnemySpawner()
@@ -17,7 +16,6 @@ void AEnemySpawner::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Apply the map bounds to the player.
     ATankBase* Player = Cast<ATankBase>(
         UGameplayStatics::GetActorOfClass(
             this,
@@ -49,7 +47,6 @@ void AEnemySpawner::BeginPlay()
         );
     }
 
-    // Remove old debug messages before displaying the counter.
     if (GEngine)
     {
         GEngine->RemoveOnScreenDebugMessage(KillsMessageKey);
@@ -76,7 +73,6 @@ void AEnemySpawner::SpawnEnemy()
         return;
     }
 
-    // Remove references to enemies that no longer exist.
     AliveEnemies.RemoveAll(
         [](const TWeakObjectPtr<AEnemyTankBase>& Enemy)
         {
@@ -172,7 +168,6 @@ void AEnemySpawner::SpawnEnemy()
             continue;
         }
 
-        // Enemies report their deaths to their owning spawner.
         SpawnParams.Owner = this;
 
         AEnemyTankBase* Enemy =
@@ -217,7 +212,6 @@ void AEnemySpawner::NotifyEnemyKilled(AEnemyTankBase* Enemy)
         return;
     }
 
-    // Do not award victory or spawn pickups after player death.
     ATankBase* Player = Cast<ATankBase>(
         UGameplayStatics::GetActorOfClass(
             this,
@@ -293,7 +287,6 @@ void AEnemySpawner::WinGame()
         return;
     }
 
-    // Set this before destroying enemies to prevent extra kill reports.
     bGameWon = true;
 
     GetWorld()->GetTimerManager().ClearTimer(
@@ -304,7 +297,6 @@ void AEnemySpawner::WinGame()
         WinRestartTimerHandle
     );
 
-    // Remove the remaining enemies.
     TArray<AActor*> Enemies;
 
     UGameplayStatics::GetAllActorsOfClass(
@@ -323,7 +315,6 @@ void AEnemySpawner::WinGame()
 
     AliveEnemies.Reset();
 
-    // Hide the kill counter when displaying the victory menu.
     if (GEngine)
     {
         GEngine->RemoveOnScreenDebugMessage(
@@ -335,8 +326,6 @@ void AEnemySpawner::WinGame()
         );
     }
 
-    // The Blueprint displays WBP_Victory.
-    // Restarting is controlled by the menu buttons.
     ShowVictoryUI();
 }
 
@@ -397,7 +386,6 @@ bool AEnemySpawner::FindFreeTile(
         );
     };
 
-    // Ignore tanks when checking walls and crates.
     FCollisionQueryParams QueryParams(
         SCENE_QUERY_STAT(PickupTileQuery),
         false
@@ -443,7 +431,6 @@ bool AEnemySpawner::FindFreeTile(
         }
     }
 
-    // Find tiles reachable from the player.
     ATankBase* Player = Cast<ATankBase>(
         UGameplayStatics::GetActorOfClass(
             this,

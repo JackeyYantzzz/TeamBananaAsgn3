@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Asgn3.h"
 #include "Modules/ModuleManager.h"
 

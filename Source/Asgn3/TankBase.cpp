@@ -11,7 +11,6 @@
 #include "Engine/Engine.h"
 #include "TimerManager.h"
 
-// Fixed keys update the existing debug messages.
 static const uint64 HealthMessageKey = 0x7A4E1001;
 static const uint64 DoubleShotMessageKey = 0x7A4E1002;
 
@@ -19,7 +18,6 @@ ATankBase::ATankBase()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Root collision.
     CollisionBox = CreateDefaultSubobject<UBoxComponent>(
         TEXT("CollisionBox")
     );
@@ -29,14 +27,12 @@ ATankBase::ATankBase()
     CollisionBox->SetCollisionProfileName(TEXT("BlockAllDynamic"));
     CollisionBox->SetGenerateOverlapEvents(true);
 
-    // Tank sprite.
     TankSpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(
         TEXT("TankSpriteComponent")
     );
 
     TankSpriteComponent->SetupAttachment(RootComponent);
 
-    // Camera boom.
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(
         TEXT("CameraBoom")
     );
@@ -47,7 +43,6 @@ ATankBase::ATankBase()
     CameraBoom->SetRelativeRotation(FRotator(0.0f, 0.0f, 0.0f));
     CameraBoom->bDoCollisionTest = false;
 
-    // Camera.
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(
         TEXT("FollowCamera")
     );
@@ -93,7 +88,6 @@ void ATankBase::Tick(float DeltaTime)
 
     ShowDoubleShot();
 
-    // Blink while invincible after taking a hit.
     if (TankSpriteComponent)
     {
         const bool bVisible =
@@ -138,7 +132,6 @@ void ATankBase::Tick(float DeltaTime)
             RightValue -= 1.0f;
         }
 
-        // The most recently pressed axis takes priority.
         if (PC->WasInputKeyJustPressed(EKeys::W) ||
             PC->WasInputKeyJustPressed(EKeys::S) ||
             PC->WasInputKeyJustPressed(EKeys::Up) ||
@@ -167,7 +160,6 @@ void ATankBase::Tick(float DeltaTime)
             }
         }
 
-        // Movement takes place on the X-Z plane.
         FVector MoveDirection = FVector(
             RightValue,
             0.0f,
@@ -347,7 +339,6 @@ void ATankBase::ActivateDoubleShot(float Duration)
         return;
     }
 
-    // Picking up another power-up refreshes the timer.
     DoubleShotEndTime =
         GetWorld()->GetTimeSeconds() + Duration;
 }
@@ -393,7 +384,6 @@ void ATankBase::Die()
 
     bIsDead = true;
 
-    // Keep the actor because it carries the camera.
     if (TankSpriteComponent)
     {
         TankSpriteComponent->SetVisibility(false);
@@ -401,7 +391,6 @@ void ATankBase::Die()
 
     SetActorEnableCollision(false);
 
-    // The end menu now controls restarting the level.
     GetWorld()->GetTimerManager().ClearTimer(
         RestartTimerHandle
     );
@@ -417,7 +406,6 @@ void ATankBase::Die()
         );
     }
 
-    // Implement this event in the player tank Blueprint.
     ShowGameOverUI();
 }
 
@@ -490,7 +478,6 @@ void ATankBase::Fire()
             SpawnParams
         );
 
-        // Fire a second bullet ahead of the first.
         if (HasDoubleShot())
         {
             GetWorld()->SpawnActor<AActor>(

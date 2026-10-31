@@ -16,15 +16,12 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    // Enemy Blueprint class to spawn.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
     TSubclassOf<class AEnemyTankBase> EnemyClass;
 
-    // Time between spawns in seconds.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
     float SpawnInterval = 2.0f;
 
-    // Half size of the play area on the X-Z plane.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
     FVector SpawnAreaRange = FVector(300.0f, 0.0f, 300.0f);
 
@@ -34,14 +31,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
     float MinDistanceToPlayer = 120.0f;
 
-    // 0 disables grid-based spawning.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
     float SpawnGridSize = 0.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
     int32 MaxSpawnAttempts = 15;
 
-    // --- Pickups ---
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickups")
     int32 KillsPerPickup = 5;
 
@@ -51,8 +46,6 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickups")
     int32 KillCount = 0;
 
-    // --- Game rules ---
-    // 0 disables victory.
     UPROPERTY(
         EditAnywhere,
         BlueprintReadWrite,
@@ -61,7 +54,6 @@ public:
     )
     int32 KillsToWin = 20;
 
-    // Retained for compatibility; automatic restart is disabled.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Rules")
     float WinRestartDelay = 5.0f;
 
@@ -71,7 +63,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Pickups")
     void NotifyEnemyKilled(class AEnemyTankBase* Enemy);
 
-    // Implement this event in the spawner Blueprint.
     UFUNCTION(BlueprintImplementableEvent, Category = "UI")
     void ShowVictoryUI();
 

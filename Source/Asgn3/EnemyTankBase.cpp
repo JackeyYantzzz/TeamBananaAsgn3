@@ -12,16 +12,13 @@ AEnemyTankBase::AEnemyTankBase()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Initialize collision box as the root component
     CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
     RootComponent = CollisionBox;
     CollisionBox->SetBoxExtent(FVector(20.0f, 20.0f, 20.0f));
-    // Block solid actors (wood crates, other tanks) while still receiving overlap events from bullets
     CollisionBox->SetCollisionProfileName(TEXT("BlockAllDynamic"));
     CollisionBox->SetGenerateOverlapEvents(true);
     CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AEnemyTankBase::OnOverlapBegin);
 
-    // Initialize sprite component and attach it to the root
     TankSpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("TankSpriteComponent"));
     TankSpriteComponent->SetupAttachment(RootComponent);
 }
@@ -29,7 +26,7 @@ AEnemyTankBase::AEnemyTankBase()
 void AEnemyTankBase::BeginPlay()
 {
     Super::BeginPlay();
-    ChooseNewRandomDirection(); // Initial random movement direction
+    ChooseNewRandomDirection();
 }
 
 void AEnemyTankBase::SetPlayArea(FVector2D InMinXZ, FVector2D InMaxXZ)
@@ -47,7 +44,6 @@ void AEnemyTankBase::SetGrid(FVector2D InOriginXZ, float InGridSize)
 
 bool AEnemyTankBase::SnapToTileCenterIfClose(float DeltaTime)
 {
-    // Without a grid the enemy may turn anywhere
     if (GridSize <= 0.0f)
     {
         return true;
@@ -59,7 +55,6 @@ bool AEnemyTankBase::SnapToTileCenterIfClose(float DeltaTime)
         Location.Y,
         TankGrid::TileCenter(Location.Z, GridOrigin.Y, GridSize));
 
-    // Close enough to the tile centre (within one frame of movement): snap and allow a turn
     if (FVector::Dist(Location, Center) <= MoveSpeed * DeltaTime + 1.0f)
     {
         SetActorLocation(Center, true);
@@ -106,8 +101,6 @@ void AEnemyTankBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Change direction every few seconds, like the classic Battle City enemies
-    // On a grid the enemy only turns once it reaches a tile centre, so it stays lined up with corridors
     DirectionChangeTimer -= DeltaTime;
     if (DirectionChangeTimer <= 0.0f && SnapToTileCenterIfClose(DeltaTime))
     {
@@ -121,19 +114,16 @@ void AEnemyTankBase::Tick(float DeltaTime)
 
     const FVector NewLocation = GetActorLocation() + (CurrentMoveDirection * MoveSpeed * DeltaTime);
 
-    // Turn around instead of leaving the map
     if (!IsInsidePlayArea(NewLocation))
     {
         ChooseNewRandomDirection();
         return;
     }
 
-    // Move with sweep so walls, crates and other tanks block the enemy
     FHitResult Hit;
     SetActorLocation(NewLocation, true, &Hit);
     if (Hit.bBlockingHit)
     {
-        // Ramming the player costs the player 1 health (the player has a short invincibility window)
         if (ATankBase* Player = Cast<ATankBase>(Hit.GetActor()))
         {
             Player->TakeHit(this);
@@ -141,7 +131,6 @@ void AEnemyTankBase::Tick(float DeltaTime)
         }
         else if (Cast<AEnemyTankBase>(Hit.GetActor()) || !TryTurnAssist(DeltaTime))
         {
-            // Blocked by another tank, or by a wall we cannot slide past: pick another direction
             ChooseNewRandomDirection();
         }
     }
@@ -151,13 +140,11 @@ void AEnemyTankBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    // Ignore further hits once destroyed (two bullets of a double shot can arrive in the same frame)
     if (IsActorBeingDestroyed())
     {
         return;
     }
 
-    // Only player bullets damage enemies
     if (OtherActor && OtherActor != this && OtherActor->IsA<ABulletBase>())
     {
         OtherActor->Destroy();
@@ -165,7 +152,6 @@ void AEnemyTankBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
         Health--;
         if (Health <= 0)
         {
-            // Count the kill (every few kills the spawner drops a pickup)
             if (AEnemySpawner* Spawner = Cast<AEnemySpawner>(GetOwner()))
             {
                 Spawner->NotifyEnemyKilled(this);
@@ -192,7 +178,6 @@ void AEnemyTankBase::UpdateFacingSprite()
         NewSprite = CurrentMoveDirection.Z >= 0.0f ? SpriteUp : SpriteDown;
     }
 
-    // Keep the current sprite if that direction has none assigned
     if (NewSprite && TankSpriteComponent->GetSprite() != NewSprite)
     {
         TankSpriteComponent->SetSprite(NewSprite);
@@ -201,7 +186,6 @@ void AEnemyTankBase::UpdateFacingSprite()
 
 void AEnemyTankBase::ChooseNewRandomDirection()
 {
-    // Battle City style: only move up / down / left / right on the X-Z plane
     static const FVector Directions[] =
     {
         FVector(1.0f, 0.0f, 0.0f),
@@ -210,7 +194,6 @@ void AEnemyTankBase::ChooseNewRandomDirection()
         FVector(0.0f, 0.0f, -1.0f)
     };
 
-    // Prefer a direction different from the current one so a blocked tank actually turns
     FVector NewDirection = CurrentMoveDirection;
     for (int32 Attempt = 0; Attempt < 8 && NewDirection.Equals(CurrentMoveDirection); ++Attempt)
     {
