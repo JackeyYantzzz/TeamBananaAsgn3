@@ -1,0 +1,49 @@
+======================================================================
+FIT2145 Assignment 3 - Playtest Feedback & Bug Tracking Report
+Project: Battle City (Unreal Engine 5 Paper2D)
+======================================================================
+
+1. PLAYTEST SUMMARY & SURVEY INSIGHTS (6 Participants)
+----------------------------------------------------------------------
+* Gameplay Comprehension: 100% of participants understood the core game concept.
+* Visuals & Map: 66.7% rated the map layout as the best-designed element.
+* Difficulty: 50% found it well-balanced; 50% felt it was slightly too easy, with 66.7% completing the run without major obstacles.
+* Controls: 50% identified movement and controls as the primary area needing polish due to tight-corridor navigation.
+
+
+2. FEEDBACK RECEIVED & IMPLEMENTED FIXES (HOW WE ADDRESSED IT)
+----------------------------------------------------------------------
+
+[Issue #1] Controls: Tank Snagging on Crate Corners
+- Feedback: Players reported getting stuck on wall corners when trying to make sharp turns into narrow corridors.
+- Cause: Discrete tile collisions caused collision overlaps if the tank was off-center by even a few pixels.
+- Addressed Fix: Implemented a C++ Turn-Assist function. When a turn input is registered, the system samples tile coordinates and snaps the tank toward the lane's centerline within a threshold, allowing smooth cornering without catching.
+
+[Issue #2] Controls: Dropped Directional Inputs
+- Feedback: Fast direction changes occasionally felt unresponsive or caused the tank to stop.
+- Cause: Input hierarchy dropped simultaneous directional inputs (e.g., pressing Up while holding Right).
+- Addressed Fix: Rewrote input priority handling to allow dynamic key override, ensuring modern, responsive directional transitions.
+
+[Issue #3] Difficulty & Balancing: Enemy Pacing Too Erratic
+- Feedback: Some players felt the game lacked scaling challenge, while others felt enemies were twitchy.
+- Addressed Fix: 
+  * Retuned base enemy movement speed curves to allow fair reaction windows.
+  * Increased total enemy wave counts leading up to the 20-kill win condition.
+  * Added ramming damage (players take damage when colliding directly into enemy tanks), preventing players from recklessly rushing enemies.
+
+[Issue #4] Map Boundary: Tanks Driving Off-Screen
+- Feedback/Bug: During edge exploration, player and enemy tanks could partially clip or drive outside the visible camera boundary.
+- Addressed Fix: Clamped world coordinates for all tank actors to strict viewport play-area limits.
+
+[Issue #5] Item Drops: Power-ups Spawning in Inaccessible Areas
+- Feedback/Bug: Repair kits occasionally spawned inside fully enclosed brick clusters that the player could not path to.
+- Addressed Fix: Integrated a C++ Flood-Fill reachability check into the drop spawner. Power-ups now exclusively spawn on open tiles connected to the player's navigable space.
+
+[Issue #6] Critical Bug: Silent Enemy Spawner Failure
+- Bug Identified: Enemies occasionally ceased spawning mid-wave with zero engine warnings or crash logs.
+- Cause: Paper2D Sprite component had its default blocking collision active alongside the root box collider, making the engine's spawn-check flag empty spawn points as occupied.
+- Addressed Fix: Disabled sprite component collision, explicitly sized the collision box primitive, and locked root component scale to (1, 1, 1).
+
+[Issue #7] UI & Game Flow: Win Condition Clarity
+- Feedback: Some testers were unsure how close they were to winning.
+- Addressed Fix: Added a clear kill-counter UI and an on-screen victory state when reaching 20 kills.
